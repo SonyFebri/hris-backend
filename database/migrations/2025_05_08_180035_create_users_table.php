@@ -12,14 +12,17 @@ return new class extends Migration {
     {
         Schema::create('users', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            $table->uuid('company_id'); // foreign key ke companies.id
             $table->string('email', 100)->unique();
             $table->string('password', 255);
             $table->boolean('is_admin')->default(false);
             $table->timestamps();
             $table->softDeletes();
 
+            $table->foreign('company_id')
+                ->references('id')->on('companies')
+                ->onDelete('cascade');
         });
-
     }
 
     /**
