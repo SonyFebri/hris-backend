@@ -4,11 +4,9 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+class CreateLettersTable extends Migration
+{
+    public function up()
     {
         Schema::create('letters', function (Blueprint $table) {
             $table->uuid('id')->primary();
@@ -18,17 +16,13 @@ return new class extends Migration {
             $table->timestamps();
             $table->softDeletes();
 
-            $table->foreign('letter_format_id')->references('id')->on('letter_formats');
-            $table->foreign('user_id')->references('id')->on('users');
+            $table->foreign('letter_format_id')->references('id')->on('letter_formats')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('employees')->onDelete('cascade');
         });
-
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
         Schema::dropIfExists('letters');
     }
-};
+}

@@ -1,0 +1,27 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class CreateCompaniesTable extends Migration
+{
+    public function up()
+    {
+        Schema::create('companies', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('company_name', 255);
+            $table->text('address')->nullable();
+            $table->unsignedInteger('subscription_days')->default(30); // Waktu langganan dalam hari
+            $table->unsignedInteger('employee_count')->default(0);     // Jumlah karyawan saat ini
+            $table->unsignedInteger('max_employee_count')->default(0); // Maksimal jumlah karyawan
+            $table->timestamps();
+            $table->softDeletes();
+        });
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists('companies');
+    }
+}
