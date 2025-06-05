@@ -10,11 +10,14 @@ class CreateLetterFormatsTable extends Migration
     {
         Schema::create('letter_formats', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('name', 100);
-            $table->text('content');
-            $table->string('status', 255);
+            $table->uuid('user_id');
+            $table->string('letter_name', 100);
+            $table->string('status', 100);
+            $table->text('path_content');
             $table->timestamps();
             $table->softDeletes();
+
+            $table->foreign('user_id')->references('id')->on('employees')->onDelete('cascade');
         });
     }
 
