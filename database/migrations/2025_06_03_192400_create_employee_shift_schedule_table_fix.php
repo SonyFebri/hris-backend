@@ -8,13 +8,14 @@ return new class extends Migration {
     public function up()
     {
         Schema::create('employee_shift_schedules', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->uuid('user_id');
             $table->uuid('ck_settings_id'); // foreign key ke check_clock_settings
             $table->date('work_date');
             $table->enum('shift_count', ['1', '2', '3'])->default('1');
             $table->unsignedTinyInteger('shift_number');
             $table->timestamps();
+            $table->softDeletes();
 
             $table->foreign('user_id')
                 ->references('id')->on('employees')

@@ -9,7 +9,7 @@ class CreateEmployeesTable extends Migration
     public function up()
     {
         Schema::create('employees', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->uuid('user_id'); // foreign key ke tabel users
             $table->string('id_employee', 100);
             $table->string('first_name', 100);

@@ -4,15 +4,15 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateLetterFormatsTable extends Migration
+class CreateLettersTable extends Migration
 {
     public function up()
     {
-        Schema::create('letter_formats', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+        Schema::create('letters', function (Blueprint $table) {
+            $table->id();
             $table->uuid('user_id');
             $table->string('letter_name', 100);
-            $table->string('status', 100);
+            $table->enum('status', ['Waiting Approval', 'Approve', 'Reject']);
             $table->text('path_content');
             $table->timestamps();
             $table->softDeletes();
@@ -23,6 +23,6 @@ class CreateLetterFormatsTable extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('letter_formats');
+        Schema::dropIfExists('letters');
     }
 }

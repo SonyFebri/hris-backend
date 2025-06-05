@@ -9,12 +9,10 @@ class CreateCheckClockSettingTimesTable extends Migration
     public function up()
     {
         Schema::create('check_clock_setting_times', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->uuid('ck_settings_id');
             $table->time('clock_in');
             $table->time('clock_out');
-            $table->time('break_start')->nullable();
-            $table->time('break_end')->nullable();
             $table->timestamps();
             $table->softDeletes();
 
