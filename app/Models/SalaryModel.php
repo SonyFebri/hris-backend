@@ -27,6 +27,6 @@ class SalaryModel extends Model
      */
     public function user()
     {
-        return $this->belongsTo(UserModel::class);
+        return $this->belongsTo(UsersModel::class);
     }
 }

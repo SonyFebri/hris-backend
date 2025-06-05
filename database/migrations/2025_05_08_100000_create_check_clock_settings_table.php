@@ -9,7 +9,7 @@ class CreateCheckClockSettingsTable extends Migration
     public function up()
     {
         Schema::create('check_clock_settings', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->string('name', 50);
             $table->enum('shift_count', ['1', '2', '3'])->default('1');
             $table->unsignedTinyInteger('shift_number');

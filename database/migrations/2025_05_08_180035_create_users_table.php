@@ -11,9 +11,11 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->uuid('company_id'); // foreign key ke companies.id
             $table->string('email', 100)->unique();
+            $table->string('company_username', 100);
+            $table->string('mobile_number', 100);
             $table->string('password', 255);
             $table->boolean('is_admin')->default(false);
             $table->timestamps();
