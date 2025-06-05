@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class TableV2 extends Migration
-{
+return new class extends Migration {
     public function up()
     {
         Schema::create('employee_shift_schedules', function (Blueprint $table) {
@@ -36,4 +35,4 @@ class TableV2 extends Migration
     {
         Schema::dropIfExists('employee_shift_schedules');
     }
-}
+};

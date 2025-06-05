@@ -13,8 +13,8 @@ class CreateCheckClocksTable extends Migration
             $table->uuid('user_id');
             $table->enum('check_clock_type', ['clock_in', 'clock_out', 'absent', 'sick_leave', 'annual_leave']);
             $table->timestamp('check_clock_time'); // Waktu absensi
-
             $table->enum('status', ['late', 'on_time'])->nullable();
+            $table->enum('Approval', ['Waiting Approval', 'Approve', 'Reject']);
             $table->string('image')->nullable(); // path ke gambar absensi
             $table->decimal('latitude', 10, 7)->nullable(); // lokasi lat
             $table->decimal('longitude', 10, 7)->nullable(); // lokasi long

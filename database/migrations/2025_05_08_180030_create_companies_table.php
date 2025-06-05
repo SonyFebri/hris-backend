@@ -11,8 +11,9 @@ class CreateCompaniesTable extends Migration
         Schema::create('companies', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('company_name', 255);
+            $table->string('company_code', 255);
             $table->text('address')->nullable();
-            $table->unsignedInteger('subscription_days')->default(30); // Waktu langganan dalam hari
+            $table->unsignedInteger('subscription_days')->default(15); // Waktu langganan dalam hari
             $table->unsignedInteger('employee_count')->default(0);     // Jumlah karyawan saat ini
             $table->unsignedInteger('max_employee_count')->default(0); // Maksimal jumlah karyawan
             $table->timestamps();
