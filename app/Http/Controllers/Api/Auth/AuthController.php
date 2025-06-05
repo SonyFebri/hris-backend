@@ -1,10 +1,10 @@
 <?php
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use App\Models\UserModel;
+use App\Models\UsersModel;
 
 class AuthController extends Controller
 {
@@ -15,13 +15,32 @@ class AuthController extends Controller
             'password' => 'required|string|min:6|confirmed',
         ]);
 
-        $user = UserModel::create([
+        $user = UsersModel::create([
             'email' => $validated['email'],
             'password' => bcrypt($validated['password']),
         ]);
 
         return response()->json(['message' => 'User registered successfully'], 201);
     }
+    public function registerAdmin(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|string|email|unique:users,email',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $user = UsersModel::create([
+            'email' => $validated['email'],
+            'password' => bcrypt($validated['password']),
+            'is_admin' => true,
+        ]);
+
+        return response()->json([
+            'message' => 'Admin registered successfully',
+            'user' => $user
+        ], 201);
+    }
+
 
     // Login & generate token
     public function login(Request $request)
@@ -31,7 +50,7 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $user = UserModel::where('email', $validated['email'])->first();
+        $user = UsersModel::where('email', $validated['email'])->first();
 
         if (!$user || !Hash::check($validated['password'], $user->password)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
