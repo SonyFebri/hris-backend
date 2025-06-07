@@ -12,7 +12,8 @@ class CreateCompaniesTable extends Migration
             $table->id();
             $table->string('company_name', 255);
             $table->string('company_code', 255);
-            $table->text('address')->nullable();
+            $table->string('bank_name', 255);
+            $table->string('bank_number', 255);
             $table->unsignedInteger('subscription_days')->default(15); // Waktu langganan dalam hari
             $table->unsignedInteger('employee_count')->default(0);     // Jumlah karyawan saat ini
             $table->unsignedInteger('max_employee_count')->default(0); // Maksimal jumlah karyawan
