@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Carbon\Carbon;
 
 class EmployeeModel extends Model
 {
@@ -17,7 +18,6 @@ class EmployeeModel extends Model
      */
     protected $fillable = [
         'user_id',
-        'id_employee',
         'first_name',
         'last_name',
         'NIK',
@@ -45,6 +45,7 @@ class EmployeeModel extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
+        'shift_count' => 'integer',
     ];
 
     /**
@@ -53,6 +54,26 @@ class EmployeeModel extends Model
     protected $hidden = [
         // Tambahkan field yang ingin disembunyikan jika ada
     ];
+
+    /**
+     * TAMBAHAN: Bootstrap model events untuk handle soft delete
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Ketika employee di-soft delete (resign)
+        static::deleting(function ($employee) {
+            if ($employee->user && $employee->user->company) {
+                $employee->user->company->decrementEmployeeCount();
+            }
+
+            // Soft delete user account juga
+            if ($employee->user) {
+                $employee->user->delete();
+            }
+        });
+    }
 
     // ===========================================
     // RELATIONSHIPS
@@ -63,15 +84,22 @@ class EmployeeModel extends Model
      */
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(UsersModel::class, 'user_id', 'id');
     }
 
     /**
-     * Relasi ke shift schedules (jika ada)
+     * Get company through user relationship
      */
-    public function shiftSchedules()
+    public function company()
     {
-        return $this->hasMany(EmployeeShiftScheduleModel::class, 'user_id', 'user_id');
+        return $this->hasOneThrough(
+            CompanyModel::class,
+            UsersModel::class,
+            'id',         // Foreign key on users table
+            'id',         // Foreign key on companies table  
+            'user_id',    // Local key on employees table
+            'company_id'  // Local key on users table
+        );
     }
 
     // ===========================================
@@ -91,6 +119,10 @@ class EmployeeModel extends Model
      */
     public function getFormattedNikAttribute()
     {
+        if (!$this->NIK || strlen($this->NIK) < 6) {
+            return $this->NIK;
+        }
+
         // Format NIK dengan pemisah jika diperlukan
         return substr($this->NIK, 0, 2) . '.' .
             substr($this->NIK, 2, 2) . '.' .
@@ -102,7 +134,7 @@ class EmployeeModel extends Model
      */
     public function setNikAttribute($value)
     {
-        $this->attributes['NIK'] = strtoupper($value);
+        $this->attributes['NIK'] = $value ? strtoupper($value) : null;
     }
 
     /**
@@ -110,7 +142,7 @@ class EmployeeModel extends Model
      */
     public function setFirstNameAttribute($value)
     {
-        $this->attributes['first_name'] = ucwords(strtolower($value));
+        $this->attributes['first_name'] = $value ? ucwords(strtolower($value)) : null;
     }
 
     /**
@@ -118,7 +150,7 @@ class EmployeeModel extends Model
      */
     public function setLastNameAttribute($value)
     {
-        $this->attributes['last_name'] = ucwords(strtolower($value));
+        $this->attributes['last_name'] = $value ? ucwords(strtolower($value)) : null;
     }
 
     // ===========================================
@@ -165,7 +197,6 @@ class EmployeeModel extends Model
         return $query->where(function ($query) use ($search) {
             $query->where('first_name', 'like', "%{$search}%")
                 ->orWhere('last_name', 'like', "%{$search}%")
-                ->orWhere('id_employee', 'like', "%{$search}%")
                 ->orWhere('NIK', 'like', "%{$search}%");
         });
     }
@@ -179,7 +210,7 @@ class EmployeeModel extends Model
      */
     public function getAge()
     {
-        return $this->date_birth->age ?? null;
+        return $this->date_birth ? $this->date_birth->age : null;
     }
 
     /**
@@ -204,6 +235,14 @@ class EmployeeModel extends Model
     public function isIntern()
     {
         return $this->contract_type === 'magang';
+    }
+
+    /**
+     * Check if employee is contract
+     */
+    public function isContract()
+    {
+        return $this->contract_type === 'kontrak';
     }
 
     /**
@@ -239,5 +278,150 @@ class EmployeeModel extends Model
     public function hasWarning()
     {
         return !empty($this->SP);
+    }
+
+    // FUNGSI UNTUK EMPLOYEE MANAGEMENT
+
+    /**
+     * Get employee number from user's company_username
+     */
+    public function getEmployeeNumberAttribute()
+    {
+        if (!$this->user || !$this->user->company_username) {
+            return null;
+        }
+
+        // Extract number from company_username format: cmp<number><name><increment>
+        $username = $this->user->company_username;
+        if (preg_match('/^cmp(\d+)/', $username, $matches)) {
+            return $matches[1];
+        }
+
+        return null;
+    }
+
+    /**
+     * Get status display (Active/Inactive based on soft delete)
+     */
+    public function getStatusDisplayAttribute()
+    {
+        return $this->deleted_at ? 'Inactive' : 'Active';
+    }
+
+    /**
+     * Get contract type display
+     */
+    public function getContractTypeDisplayAttribute()
+    {
+        $types = [
+            'permanen' => 'Permanent',
+            'percobaan' => 'Probation',
+            'magang' => 'Intern',
+            'kontrak' => 'Contract'
+        ];
+
+        return $types[$this->contract_type] ?? $this->contract_type;
+    }
+
+    /**
+     * Get gender display
+     */
+    public function getGenderDisplayAttribute()
+    {
+        return $this->gender === 'Laki-laki' ? 'Male' : 'Female';
+    }
+
+    /**
+     * Scope for filtering by company
+     */
+    public function scopeByCompany($query, $companyId)
+    {
+        return $query->whereHas('user', function ($q) use ($companyId) {
+            $q->where('company_id', $companyId);
+        });
+    }
+
+    /**
+     * Scope for filtering by period (month/year)
+     */
+    public function scopeByPeriod($query, Carbon $date)
+    {
+        return $query->whereYear('created_at', $date->year)
+            ->whereMonth('created_at', $date->month);
+    }
+
+    /**
+     * Scope for new hires in specific period
+     */
+    public function scopeNewHiresInPeriod($query, Carbon $date)
+    {
+        return $query->whereYear('created_at', $date->year)
+            ->whereMonth('created_at', $date->month)
+            ->whereNull('deleted_at');
+    }
+
+    /**
+     * Get mobile number from user
+     */
+    public function getMobileNumberAttribute()
+    {
+        return $this->user ? $this->user->mobile_number : null;
+    }
+
+    /**
+     * Get company username from user  
+     */
+    public function getCompanyUsernameAttribute()
+    {
+        return $this->user ? $this->user->company_username : null;
+    }
+
+    /**
+     * Check if employee can be activated/deactivated
+     */
+    public function canToggleStatus()
+    {
+        return true; // Bisa disesuaikan dengan business logic
+    }
+
+    /**
+     * Soft delete employee and update company count
+     */
+    public function resign()
+    {
+        $this->delete(); // Soft delete
+
+        // Update company employee count sudah dihandle di boot() method
+
+        return true;
+    }
+
+    /**
+     * TAMBAHAN: Scope untuk filter berdasarkan status (active/inactive)
+     */
+    public function scopeByStatus($query, $status)
+    {
+        if ($status === 'active') {
+            return $query->whereNull('deleted_at');
+        } elseif ($status === 'inactive') {
+            return $query->whereNotNull('deleted_at')->withTrashed();
+        }
+
+        return $query;
+    }
+
+    public function getTableDataAttribute()
+    {
+        return [
+            'id' => $this->id,
+            'employee_number' => $this->employee_number,
+            'name' => $this->full_name,
+            'gender' => $this->gender,
+            'mobile_number' => $this->mobile_number,
+            'branch' => $this->branch ?? '-',
+            'role' => $this->role ?? '-',
+            'status' => $this->status_display,
+            'is_active' => is_null($this->deleted_at)
+        ];
     }
 }
