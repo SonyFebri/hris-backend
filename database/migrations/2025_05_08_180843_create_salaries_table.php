@@ -10,7 +10,7 @@ class CreateSalariesTable extends Migration
     {
         Schema::create('salaries', function (Blueprint $table) {
             $table->id();
-            $table->uuid('user_id');
+            $table->unsignedBigInteger('user_id');
             $table->string('type', 255);
             $table->double('rate');
             $table->date('effective_date');

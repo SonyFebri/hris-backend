@@ -10,7 +10,7 @@ class CreateEmployeesTable extends Migration
     {
         Schema::create('employees', function (Blueprint $table) {
             $table->id();
-            $table->uuid('user_id'); // foreign key ke tabel users
+            $table->unsignedBigInteger('user_id'); // foreign key ke tabel users
             $table->string('first_name', 100);
             $table->string('last_name', 100);
             $table->string('NIK', 100)->nullable();

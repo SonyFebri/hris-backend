@@ -10,7 +10,7 @@ class CreateCheckClocksTable extends Migration
     {
         Schema::create('check_clocks', function (Blueprint $table) {
             $table->id();
-            $table->uuid('user_id');
+            $table->unsignedBigInteger('user_id');
             $table->enum('check_clock_type', ['clock_in', 'clock_out', 'absent', 'sick_leave', 'annual_leave']);
             $table->timestamp('check_clock_time'); // Waktu absensi
             $table->enum('status', ['late', 'on_time'])->nullable();
