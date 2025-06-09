@@ -24,22 +24,26 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 // Auth (Public)
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::prefix('auth')->controller(AuthController::class)->group(function () {
+    Route::post('/register', 'registerAdmin');
+    Route::post('/login-admin', 'loginAdmin');
+    Route::post('/login-employee', 'loginEmployee');
+});
 
 // Authenticated
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/me', [AuthController::class, 'me']);
-
+    Route::prefix('auth')->controller(AuthController::class)->group(function () {
+        Route::post('/logout', 'logout');
+        Route::get('/me', 'getUser');
+    });
     // Admin-only routes
     Route::middleware('is_admin:true')->group(function () {
         // tambahkan rute khusus admin di sini
         Route::prefix('check-clocks')->controller(CheckClockController::class)->group(function () {
             Route::get('/', 'index');            // GET /api/check-clocks
-            Route::post('/', 'store');           // POST /api/check-clocks
-            Route::get('/{id}', 'show');         // GET /api/check-clocks/{id}
-            Route::delete('/{id}', 'destroy');   // DELETE /api/check-clocks/{id}
+            Route::post('/add', 'store');           // POST /api/check-clocks/add
+            Route::get('/show{id}', 'show');         // GET /api/check-clocks/show{id}
+            Route::delete('/delete{id}', 'destroy');   // DELETE /api/check-clocks/delete{id}
         });
     });
 
