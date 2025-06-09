@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->uuid('company_id'); // foreign key ke companies.id
+            $table->unsignedBigInteger('company_id'); // foreign key ke companies.id
             $table->string('email', 100)->unique()->nullable();
             $table->string('company_username', 100)->nullable();
             $table->string('mobile_number', 100)->nullable();

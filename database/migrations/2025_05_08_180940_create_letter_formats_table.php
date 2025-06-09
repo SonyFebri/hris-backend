@@ -4,13 +4,12 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateLettersTable extends Migration
-{
+return new class extends Migration {
     public function up()
     {
         Schema::create('letters', function (Blueprint $table) {
             $table->id();
-            $table->uuid('user_id');
+            $table->unsignedBigInteger('user_id');
             $table->string('letter_name', 100);
             $table->enum('status', ['Waiting Approval', 'Approve', 'Reject']);
             $table->text('path_content');
@@ -25,4 +24,4 @@ class CreateLettersTable extends Migration
     {
         Schema::dropIfExists('letters');
     }
-}
+};
