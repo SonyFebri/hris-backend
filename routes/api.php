@@ -23,17 +23,13 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Auth (Public)
-Route::prefix('auth')->controller(AuthController::class)->group(function () {
-    Route::post('/register', 'registerAdmin');
-    Route::post('/login-admin', 'loginAdmin');
-    Route::post('/login-employee', 'loginEmployee');
-});
+
+
+
 
 // Authenticated
 Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('auth')->controller(AuthController::class)->group(function () {
-        Route::post('/logout', 'logout');
         Route::get('/me', 'getUser');
     });
     // Admin-only routes
