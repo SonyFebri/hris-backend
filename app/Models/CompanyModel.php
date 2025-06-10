@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Carbon\Carbon;
 
 class CompanyModel extends Model
@@ -49,19 +50,26 @@ class CompanyModel extends Model
     ];
 
     /**
-     * Get the employees for the company.
+     * Get the users for the company.
      */
-    public function employees(): HasMany
+    public function users(): HasMany
     {
-        return $this->hasMany(EmployeeModel::class);
+        return $this->hasMany(UsersModel::class, 'company_id', 'id');
     }
 
     /**
-     * Get the check clock settings for the company.
+     * Get the employees for the company through users.
      */
-    public function checkClockSettings(): HasMany
+    public function employees(): HasManyThrough
     {
-        return $this->hasMany(CheckClockSettingModel::class);
+        return $this->hasManyThrough(
+            EmployeeModel::class,
+            UsersModel::class,
+            'company_id', // Foreign key on users table
+            'user_id',    // Foreign key on employees table
+            'id',         // Local key on companies table
+            'id'          // Local key on users table
+        );
     }
 
     /**
@@ -263,5 +271,71 @@ class CompanyModel extends Model
     public function getEmployeeInfoAttribute(): string
     {
         return $this->employee_count . '/' . $this->max_employee_count . ' employees';
+    }
+
+    /**
+     */
+    public function getTotalEmployeesInMonth(Carbon $date): int
+    {
+        return $this->employees()
+            ->whereYear('created_at', $date->year)
+            ->whereMonth('created_at', $date->month)
+            ->withTrashed() // Include soft deleted
+            ->count();
+    }
+
+    /**
+     */
+    public function getTotalNewHiresInMonth(Carbon $date): int
+    {
+        return $this->employees()
+            ->whereYear('created_at', $date->year)
+            ->whereMonth('created_at', $date->month)
+            ->count(); // Only active employees
+    }
+
+    /**
+     */
+    public function getActiveEmployeesCount(): int
+    {
+        return $this->employees()->count();
+    }
+
+    /**
+     */
+    public function getEmployeeStatisticsForPeriod(?Carbon $date = null): array
+    {
+        $date = $date ?? Carbon::now();
+
+        return [
+            'periode' => $date->format('F, Y'),
+            'total_employee' => $this->getTotalEmployeesInMonth($date),
+            'total_new_hire' => $this->getTotalNewHiresInMonth($date), 
+            'active_employee' => $this->getActiveEmployeesCount(),
+        ];
+    }
+
+    /**
+     * Get employee statistics for dashboard
+     */
+    public function getEmployeeStatistics(?Carbon $date = null): array
+    {
+        $date = $date ?? Carbon::now();
+
+        return [
+            'total_employee' => $this->getTotalEmployeesInMonth($date),
+            'total_new_hire' => $this->getTotalNewHiresInMonth($date),
+            'active_employee' => $this->getActiveEmployeesCount(),
+            'period' => $date->format('F, Y')
+        ];
+    }
+
+    /**
+     * Untuk memastikan konsistensi data
+     */
+    public function syncEmployeeCount(): bool
+    {
+        $actualCount = $this->getActiveEmployeesCount();
+        return $this->update(['employee_count' => $actualCount]);
     }
 }
