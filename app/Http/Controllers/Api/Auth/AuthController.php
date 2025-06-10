@@ -23,6 +23,7 @@ class AuthController extends Controller
             'bank_number' => 'required|string|max:50',
             'email' => 'required|string|email|unique:users',
             'password' => 'required|string|min:6|confirmed',
+
         ]);
 
         $existingCompany = CompanyModel::where('company_name', $validated['company_name'])->first();
@@ -132,10 +133,12 @@ class AuthController extends Controller
     // Logout dan revoke token
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
-
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
         return response()->json(['message' => 'Logged out successfully']);
     }
+
     public function resetPassword(Request $request)
     {
         $request->validate([

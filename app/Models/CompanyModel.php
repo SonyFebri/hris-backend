@@ -27,7 +27,8 @@ class CompanyModel extends Model
     protected $fillable = [
         'company_name',
         'company_code',
-        'address',
+        'bank_name',
+        'bank_number',
         'subscription_days',
         'employee_count',
         'max_employee_count',
