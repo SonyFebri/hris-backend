@@ -9,8 +9,8 @@ use App\Models\EmployeeModel;
 use Illuminate\Support\Facades\Auth;
 use App\Models\CompanyModel;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Str;
+use App\Notifications\CustomResetPassword;
 
 class AuthController extends Controller
 {
@@ -65,25 +65,25 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        // Ambil user dengan email dan role admin
-        $user = UsersModel::where('email', $validated['email'])
-            ->where('is_admin', true)
-            ->first();
-
-        if (!$user || !Hash::check($validated['password'], $user->password)) {
-            return response()->json(['message' => 'Invalid credentials or not an admin'], 401);
+        // Coba login pakai Auth
+        if (!Auth::attempt($validated)) {
+            return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        // Buat token
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // Cek apakah user admin
+        $user = Auth::user();
+        if (!$user->is_admin) {
+            Auth::logout(); // logout kalau bukan admin
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
 
+        $request->session()->regenerate(); // amankan session
         return response()->json([
             'message' => 'Login successful',
-            'access_token' => $token,
-            'token_type' => 'Bearer',
+            'user' => $user,
         ]);
-
     }
+
 
     public function loginEmployee(Request $request)
     {
@@ -109,26 +109,10 @@ class AuthController extends Controller
             'message' => 'Login successful',
             'access_token' => $token,
             'token_type' => 'Bearer',
-            'user' => $user->makeHidden(['password']),
         ]);
     }
 
-    public function sendResetLinkEmail(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-        ]);
 
-        $status = Password::sendResetLink(
-            $request->only('email')
-        );
-
-        if ($status === Password::RESET_LINK_SENT) {
-            return response()->json(['message' => 'Password reset link sent to your email']);
-        } else {
-            return response()->json(['message' => 'Unable to send reset link'], 400);
-        }
-    }
 
     // Logout dan revoke token
     public function logout(Request $request)
@@ -139,31 +123,46 @@ class AuthController extends Controller
         return response()->json(['message' => 'Logged out successfully']);
     }
 
+    public function sendResetLinkEmail(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $user = UsersModel::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Email not found'], 404);
+        }
+
+        $token = Password::createToken($user);
+
+        $user->notify(new CustomResetPassword($token, $user->email));
+
+        return response()->json([
+            'message' => 'Password reset link sent to your email',
+            'email' => $user->email
+        ]);
+    }
+
     public function resetPassword(Request $request)
     {
         $request->validate([
             'token' => 'required',
             'email' => 'required|email',
-            'password' => 'required|min:8|confirmed',
+            'password' => 'required|confirmed|min:6',
         ]);
 
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user, $password) {
-                $user->forceFill([
-                    'password' => Hash::make($password),
-                    'remember_token' => Str::random(60),
-                ])->save();
-
-                event(new PasswordReset($user));
+                $user->forceFill(['password' => bcrypt($password)])->save();
             }
         );
 
-        if ($status === Password::PASSWORD_RESET) {
-            return response()->json(['message' => 'Password has been reset successfully']);
-        } else {
-            return response()->json(['message' => 'Password reset failed'], 400);
-        }
+        return $status === Password::PASSWORD_RESET
+            ? response()->json(['message' => 'Password reset successful'])
+            : response()->json(['message' => 'Reset failed'], 400);
     }
 
     // Get data user yang login

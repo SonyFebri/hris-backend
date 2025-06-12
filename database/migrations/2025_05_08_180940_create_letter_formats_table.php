@@ -11,7 +11,7 @@ return new class extends Migration {
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->string('letter_name', 100);
-            $table->enum('status', ['Waiting Approval', 'Approve', 'Reject']);
+            $table->enum('status', ['Pending', 'Approved', 'Rejected']);
             $table->text('path_content');
             $table->timestamps();
             $table->softDeletes();

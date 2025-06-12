@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\Letters\LetterController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,4 +22,12 @@ Route::middleware('web')->prefix('auth')->controller(AuthController::class)->gro
     Route::post('/login-admin', 'loginAdmin');
     Route::post('/login-employee', 'loginEmployee');
     Route::post('/logout', 'logout');
+
+});
+Route::middleware('is_admin:true')->group(function () {
+    // tambahkan rute khusus admin di sini
+    Route::prefix('letters')->controller(LetterController::class)->group(function () {
+        Route::get('/', 'index');
+        Route::post('/approval', 'updateStatus');
+    });
 });
