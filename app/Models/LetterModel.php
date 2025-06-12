@@ -45,14 +45,14 @@ class LetterModel extends Model
     /**
      * Status constants
      */
-    const STATUS_WAITING = 'Waiting Approval';
-    const STATUS_APPROVED = 'Approve';
-    const STATUS_REJECTED = 'Reject';
+    const STATUS_WAITING = 'Pending';
+    const STATUS_APPROVED = 'Approved';
+    const STATUS_REJECTED = 'Rejected';
 
     /**
      * Get the employee that owns this letter.
      */
-    public function employee(): BelongsTo
+    public function employees(): BelongsTo
     {
         return $this->belongsTo(EmployeeModel::class, 'user_id');
     }
