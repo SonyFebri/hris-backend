@@ -2,13 +2,12 @@ version: "3.8"
 
 services:
     app:
-        build: ./backend
+        build: .
         container_name: laravel_backend
         volumes:
             - .:/var/www
         expose:
             - "9000"
-        command: php artisan serve --host=0.0.0.0 --port=9000
         networks:
             - proxy_net
         depends_on:
