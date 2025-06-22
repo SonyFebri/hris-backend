@@ -8,7 +8,7 @@ services:
         volumes:
             - .:/var/www
         expose:
-            - "8000"
+            - "9000"
         networks:
             - proxy_net
         depends_on:
