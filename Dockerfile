@@ -2,22 +2,33 @@ FROM php:8.2-fpm
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
-    libpng-dev libxml2-dev libzip-dev unzip zip git curl libpq-dev libonig-dev \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    unzip \
+    zip \
+    git \
+    curl \
+    libpq-dev \
+    postgresql-client \
     && docker-php-ext-install pdo pdo_pgsql mbstring zip exif bcmath \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Composer
+# Copy Composer from official image
 COPY --from=composer:2.6 /usr/bin/composer /usr/bin/composer
 
-# Setup project
+# Set working directory
 WORKDIR /var/www
+
+# Copy Laravel files
 COPY . .
 
-# Entrypoint setup
+# Copy and set permission for entrypoint
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["php-fpm"]
 
 EXPOSE 9000
+CMD ["php-fpm"]
