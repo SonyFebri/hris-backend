@@ -1,0 +1,37 @@
+name: Deploy Laravel App to VM
+
+on:
+  push:
+    branches:
+      - main # Jalankan hanya saat push ke branch 'main'
+
+jobs:
+  deploy:
+    name: Deploy to Production Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v3
+
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Deploy to VM via SSH
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
+            cd /path/to/your/app
+
+            echo "📦 Pulling latest changes..."
+            git pull origin main
+
+            echo "🔄 Restarting Docker..."
+            docker-compose down
+            docker-compose up -d --build
+
+            docker-compose exec backend php artisan migrate --force
+
+            echo "✅ Pulling completed!"
+          EOF
