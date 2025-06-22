@@ -22,7 +22,7 @@ jobs:
       - name: Deploy to VM via SSH
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
-            cd /path/to/your/app
+            cd /home/azureuser/hris-app/hris-backend
 
             echo "📦 Pulling latest changes..."
             git pull origin main
