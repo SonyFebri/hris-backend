@@ -2,31 +2,31 @@ version: "3.8"
 
 services:
     app:
-        build:
-            context: .
+        build: ./backend
         container_name: laravel_backend
         volumes:
             - .:/var/www
         expose:
             - "9000"
+        command: php artisan serve --host=0.0.0.0 --port=9000
         networks:
             - proxy_net
         depends_on:
             - db
         restart: unless-stopped
 
-    db:
-        image: postgres:15
-        container_name: postgres_laravel
-        restart: unless-stopped
-        environment:
-            POSTGRES_DB: hris-database
-            POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: sonyfebri04
-        volumes:
-            - pgdata:/var/lib/postgresql/data
-        networks:
-            - proxy_net
+        db:
+            image: postgres:15
+            container_name: postgres_laravel
+            restart: unless-stopped
+            environment:
+                POSTGRES_DB: hris-database
+                POSTGRES_USER: postgres
+                POSTGRES_PASSWORD: sonyfebri04
+            volumes:
+                - pgdata:/var/lib/postgresql/data
+            networks:
+                - proxy_net
 
 volumes:
     pgdata:
