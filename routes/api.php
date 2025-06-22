@@ -51,3 +51,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:false')->group(function () {
     });
 });
+//tes
