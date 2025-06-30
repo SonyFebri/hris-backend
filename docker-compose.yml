@@ -5,7 +5,7 @@ services:
         build: .
         container_name: laravel_backend
         volumes:
-            - .:/var/www
+            - ./backend:/var/www
         expose:
             - "9000"
         networks:
