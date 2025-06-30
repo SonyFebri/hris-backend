@@ -16,6 +16,9 @@ use App\Http\Controllers\Api\Letters\LetterController;
 */
 
 Route::get('/sanctum/csrf-cookie', [\Laravel\Sanctum\Http\Controllers\CsrfCookieController::class, 'show']);
+Route::get('/', function () {
+    return 'Laravel is working!';
+});
 
 Route::middleware('web')->prefix('auth')->controller(AuthController::class)->group(function () {
     Route::post('/register', 'registerAdmin');
